@@ -139,6 +139,10 @@ class GoogleDriveAPI(VKAPI):
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
+                if not os.path.exists('credentials.json'):
+                    print("Файл credentials.json отсутствует")
+                    return None
+                
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'credentials.json', self.DRIVE_URL)
                 creds = flow.run_local_server(port=0)
@@ -150,6 +154,8 @@ class GoogleDriveAPI(VKAPI):
     def create_folder(self):
         """Проверка на существование папки по имени. Если существует, возвращает её ID, иначе создаёт новую папку."""
         service = self.authenticate()
+        if service is None:
+            exit(1)
         results = service.files().list(q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}'", 
                                        fields="files(id, name)").execute()
         items = results.get('files', [])
