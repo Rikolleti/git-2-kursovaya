@@ -19,6 +19,8 @@
 
 ## Установка и использование
 1. **Замените плейсхолдеры в файле settings.ini на ваш реальный токен VK и ID пользователя, а также токен YA**
-   - vk_client = VKAPI("TOKEN_VK", "VK_ID")
+   - token_vk = ВАШ_ТОКЕН
+   - user_id = ВАШ_ТОКЕН
+   - token_ya = ВАШ_ТОКЕН
 2. **Для загрузки фотографий на хранилище Google-Диск нужно в папку с кодом вложить файл credentials.json**
    - https://console.cloud.google.com/apis/credentials
