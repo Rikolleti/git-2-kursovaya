@@ -1,34 +1,56 @@
+import configparser
+import os
 import requests
 import json
-import os
 import pickle
-from tqdm import tqdm
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.http import MediaFileUpload
+from tqdm import tqdm
 
 save_path = 'images/'
 folder_name = "NETOLOGY_TASK"
+
+config = configparser.ConfigParser()
+config.read('settings.ini')
+
+vk_token = config['VK']['token_vk'].strip()
+vk_user_id = config['VK']['user_id'].strip()
+ya_token = config['Yandex']['token_ya'].strip()
+
+if not config.sections():
+    print("Файл settings.ini не найден или пуст.")
+else:
+    print("Файл settings.ini успешно загружен.")
+    print("Секции:", config.sections())
 
 class VKAPI():
     #Класс для сбора фотографий из ВК
     API_URL = "https://api.vk.com/method/"
 
-    def __init__(self, token_vk, user_id_vk):
+    def __init__(self, token_vk, user_id_vk, version="5.199"):
         self.token_vk = token_vk
         self.user_id_vk = user_id_vk
+        self.version = version
         self.uploaded_files = []
     
     def get_params_vk(self):
         return {
             "access_token" : self.token_vk,
-            "v" : "5.199"
+            "v" : self.version
         }
 
     def get_photos(self):
         params = self.get_params_vk()
         params.update({"album_id": "profile", "extended": "1"})
         response = requests.get(f"{self.API_URL}/photos.get", params=params)
+
+        if "error" in response:
+            error_msg = data["error"]["error_msg"]
+            print(f"Ошибка API ВКонтакте: {error_msg}")
+            print()
+            return []
+
         url = response.json()["response"]["items"]
         filenames = []
         likes = [likes["likes"]["count"] for likes in url if 'likes' in likes]
@@ -79,6 +101,7 @@ class YAAPI(VKAPI):
             print("Папка создана или уже существует")
         else:
             print("Ошибка при создании папки:", response.json())
+            print()
     
     def upload_images(self, filenames):
         self.create_folder()
@@ -94,6 +117,7 @@ class YAAPI(VKAPI):
                     print(f"Загрузка {filename} завершена:", response.status_code)
             else:
                 print(f"Ошибка загрузки {filename}: {response.json()}")
+                print()
         return None
 
 class GoogleDriveAPI(VKAPI):
@@ -103,7 +127,7 @@ class GoogleDriveAPI(VKAPI):
     """
     DRIVE_URL = "https://www.googleapis.com/auth/drive"
 
-    def __init__(self, token_gdrive):
+    def __init__(self, token_gdrive = ""):
         self.token_gdrive = token_gdrive
 
     def authenticate(self):
@@ -168,11 +192,10 @@ class GoogleDriveAPI(VKAPI):
 
 
 if __name__ == "__main__":
+    vk_client = VKAPI(vk_token, vk_user_id)
+    ya_client = YAAPI(ya_token)
+    google_drive_client = GoogleDriveAPI()
 
-    vk_client = VKAPI("TOKEN", "USER_ID")
-    ya_client = YAAPI("TOKEN")
-
-    google_drive_client = GoogleDriveAPI("")
     photo = vk_client.get_photos()
     upload_images_to_ya = ya_client.upload_images(photo)
     upload_images_to_google = google_drive_client.upload_images(photo)

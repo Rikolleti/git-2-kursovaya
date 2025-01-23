@@ -18,9 +18,7 @@
    pip install requests google-auth-oauthlib google-api-python-client
 
 ## Установка и использование
-1. **Замените плейсхолдеры в коде на ваш реальный токен VK и ID пользователя:**
+1. **Замените плейсхолдеры в файле settings.ini на ваш реальный токен VK и ID пользователя, а также токен YA**
    - vk_client = VKAPI("TOKEN_VK", "VK_ID")
-2. **Замените TOKEN_VK на ваш токен доступа VK, а VK_ID — на ваш ID пользователя ВКонтакте.**
-   - ya_client = YAAPI("TOKEN_YA")
-3. **Для загрузки фотографий на хранилище Google-Диск нужно в папку с кодом вложить файл credentials.json**
+2. **Для загрузки фотографий на хранилище Google-Диск нужно в папку с кодом вложить файл credentials.json**
    - https://console.cloud.google.com/apis/credentials
