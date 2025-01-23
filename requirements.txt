@@ -4,3 +4,4 @@ google-auth==2.27.0
 google-auth-httplib2==0.2.0
 google-api-core==2.16.1
 google-auth-oauthlib==1.2.1
+tqdm==4.66.4

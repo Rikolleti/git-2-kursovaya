@@ -2,6 +2,7 @@ import requests
 import json
 import os
 import pickle
+from tqdm import tqdm
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.http import MediaFileUpload
@@ -34,7 +35,7 @@ class VKAPI():
         image = [image['orig_photo']["url"] for image in url if 'orig_photo' in image]
         zipped = list(zip(image,likes))
 
-        for img, name in zipped:
+        for img, name in tqdm(zipped):
             filename = f"{name}.jpg"
             download_img = requests.get(img)
             with open(save_path + filename, 'wb') as f:
@@ -81,7 +82,7 @@ class YAAPI(VKAPI):
     
     def upload_images(self, filenames):
         self.create_folder()
-        for filename in filenames:
+        for filename in tqdm(filenames):
             params = self.get_params_yadisk()
             headers = self.get_header_yadisk()
             params.update({"path": f"{folder_name}/{filename}"})
@@ -148,7 +149,7 @@ class GoogleDriveAPI(VKAPI):
         service = self.authenticate()
         folder_id = self.create_folder()
 
-        for filename in filenames:
+        for filename in tqdm(filenames):
             file_path = f"images/{filename}"
             if os.path.exists(file_path):
                 file_metadata = {
@@ -168,8 +169,8 @@ class GoogleDriveAPI(VKAPI):
 
 if __name__ == "__main__":
 
-    vk_client = VKAPI("TOKEN_VK", "VK_ID")
-    ya_client = YAAPI("TOKEN_YA")
+    vk_client = VKAPI("TOKEN", "USER_ID")
+    ya_client = YAAPI("TOKEN")
 
     google_drive_client = GoogleDriveAPI("")
     photo = vk_client.get_photos()

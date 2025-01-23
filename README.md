@@ -10,6 +10,7 @@
    - `google-auth-oauthlib`: Для аутентификации в Google Drive API.
    - `googleapiclient`: Для работы с Google Drive.
    - `pickle`: Для хранения токенов аутентификации.
+   - `tqdm`: Для прогресс-бара.
 
    Установите эти зависимости с помощью pip:
 
