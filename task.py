@@ -34,14 +34,14 @@ class VKAPI():
         self.version = version
         self.uploaded_files = []
     
-    def get_params_vk(self):
+    def _get_params_vk(self):
         return {
             "access_token" : self.token_vk,
             "v" : self.version
         }
 
     def get_photos(self):
-        params = self.get_params_vk()
+        params = self._get_params_vk()
         params.update({"album_id": "profile", "extended": "1"})
         response = requests.get(f"{self.API_URL}/photos.get", params=params)
 
@@ -70,10 +70,10 @@ class VKAPI():
             })
 
         print("Фотографии загружены")
-        self.create_json_report()
+        self._create_json_report()
         return filenames
     
-    def create_json_report(self):
+    def _create_json_report(self):
         with open("uploaded_files.json", "w") as json_file:
             json.dump(self.uploaded_files, json_file, ensure_ascii=False, indent=4)
         print("Информация о загруженных файлах сохранена в uploaded_files.json")
@@ -86,15 +86,15 @@ class YAAPI(VKAPI):
     def __init__(self, token_ya):
         self.token_ya = token_ya
 
-    def get_params_yadisk(self):
+    def _get_params_yadisk(self):
         return {"path": f"{folder_name}"}
     
-    def get_header_yadisk(self):
+    def _get_header_yadisk(self):
         return {'Authorization': f'OAuth {self.token_ya}'}
 
-    def create_folder(self):
-        params = self.get_params_yadisk()
-        headers = self.get_header_yadisk()
+    def _create_folder(self):
+        params = self._get_params_yadisk()
+        headers = self._get_header_yadisk()
         response = requests.put(self.DISK_URL, params=params, headers=headers)
         if response.status_code == 201:
             print("Папка создана или уже существует")
@@ -103,10 +103,10 @@ class YAAPI(VKAPI):
             print()
     
     def upload_images(self, filenames):
-        self.create_folder()
+        self._create_folder()
         for filename in tqdm(filenames):
-            params = self.get_params_yadisk()
-            headers = self.get_header_yadisk()
+            params = self._get_params_yadisk()
+            headers = self._get_header_yadisk()
             params.update({"path": f"{folder_name}/{filename}"})
             response = requests.get(self.UPLOAD_URL, params=params, headers=headers)
             if 'href' in response.json():
@@ -129,7 +129,7 @@ class GoogleDriveAPI(VKAPI):
     def __init__(self, token_gdrive = ""):
         self.token_gdrive = token_gdrive
 
-    def authenticate(self):
+    def _authenticate(self):
         creds = None
         if os.path.exists('token.pickle'):
             with open('token.pickle', 'rb') as token:
@@ -150,9 +150,9 @@ class GoogleDriveAPI(VKAPI):
                 pickle.dump(creds, token)
         return build('drive', 'v3', credentials=creds)
 
-    def create_folder(self):
+    def _create_folder(self):
         """Проверка на существование папки по имени. Если существует, возвращает её ID, иначе создаёт новую папку."""
-        service = self.authenticate()
+        service = self._authenticate()
         if service is None:
             exit(1)
         results = service.files().list(q=f"mimeType='application/vnd.google-apps.folder' and name='{folder_name}'", 
@@ -175,8 +175,8 @@ class GoogleDriveAPI(VKAPI):
     
     def upload_images(self, filenames):
         """Загрузка файлов из папки images на Google Диск."""
-        service = self.authenticate()
-        folder_id = self.create_folder()
+        service = self._authenticate()
+        folder_id = self._create_folder()
 
         for filename in tqdm(filenames):
             file_path = f"images/{filename}"
