@@ -84,7 +84,6 @@ class YAAPI(VKAPI):
     UPLOAD_URL = "https://cloud-api.yandex.net/v1/disk/resources/upload"
 
     def __init__(self, token_ya):
-        super().__init__(token_vk=None, user_id_vk=None)
         self.token_ya = token_ya
 
     def get_params_yadisk(self):
