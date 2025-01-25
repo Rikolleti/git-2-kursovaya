@@ -68,7 +68,7 @@ class VKAPI():
         else:
             print(f"Папка `{local_folder}` уже существует!")
             
-        for img, name in tqdm(zipped):
+        for img, name in tqdm(zipped, desc="Загрузка фотографий из ВК", position=0):
             filename = f"{name}.jpg"
             download_img = requests.get(img)
             with open(local_folder + "/" + filename, 'wb') as f:
@@ -117,7 +117,7 @@ class YAAPI():
     
     def upload_images(self, filenames):
         self._create_folder()
-        for filename in tqdm(filenames):
+        for filename in tqdm(filenames, desc="Загрузка на Яндекс.Диск", position=1):
             params = self._get_params_yadisk()
             headers = self._get_header_yadisk()
             params.update({"path": f"{folder_name}/{filename}"})
@@ -194,7 +194,7 @@ class GoogleDriveAPI():
         service = self._authenticate()
         folder_id = self._create_folder()
 
-        for filename in tqdm(filenames):
+        for filename in tqdm(filenames, desc="Загрузка на Google Диск", position=2):
             file_path = f"images/{filename}"
             if os.path.exists(file_path):
                 file_metadata = {
