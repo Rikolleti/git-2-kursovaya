@@ -8,14 +8,14 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.http import MediaFileUpload
 from tqdm import tqdm
 
-save_path = 'images/'
+local_folder = 'images'
 folder_name = "NETOLOGY_TASK"
 
 config = configparser.ConfigParser()
 config.read('settings.ini')
 
 vk_token = config['VK']['token_vk'].strip()
-vk_user_id = config['VK']['user_id'].strip()
+vk_user_id = config['VK']['user_id_vk'].strip()
 ya_token = config['Yandex']['token_ya'].strip()
 
 if not config.sections():
@@ -42,11 +42,15 @@ class VKAPI():
 
     def get_photos(self):
         params = self._get_params_vk()
-        params.update({"album_id": "profile", "extended": "1"})
+        params.update({
+            "album_id": "profile",
+            "owner_id": f"{self.user_id_vk}",
+            "extended": "1"
+        })
         response = requests.get(f"{self.API_URL}/photos.get", params=params)
 
         if "error" in response:
-            error_msg = data["error"]["error_msg"]
+            error_msg = response["error"]["error_msg"]
             print(f"Ошибка API ВКонтакте: {error_msg}")
             print()
             return []
@@ -57,19 +61,27 @@ class VKAPI():
         image = [image['orig_photo']["url"] for image in url if 'orig_photo' in image]
         zipped = list(zip(image,likes))
 
+        if not os.path.exists(local_folder):
+            os.makedirs(local_folder)
+            print(f"Папка `{local_folder}` создана")
+            print()
+        else:
+            print(f"Папка `{local_folder}` уже существует!")
+            
         for img, name in tqdm(zipped):
             filename = f"{name}.jpg"
             download_img = requests.get(img)
-            with open(save_path + filename, 'wb') as f:
+            with open(local_folder + "/" + filename, 'wb') as f:
                 f.write(download_img.content)
             filenames.append(filename)
 
             self.uploaded_files.append({
                 "file_name": filename,
-                "size": os.path.getsize(save_path + filename)
+                "size": os.path.getsize(local_folder + "/" + filename)
             })
 
-        print("Фотографии загружены")
+        print(f"Фотографии загружены в папку {local_folder}")
+        print()
         self._create_json_report()
         return filenames
     
@@ -77,8 +89,9 @@ class VKAPI():
         with open("uploaded_files.json", "w") as json_file:
             json.dump(self.uploaded_files, json_file, ensure_ascii=False, indent=4)
         print("Информация о загруженных файлах сохранена в uploaded_files.json")
+        print()
 
-class YAAPI(VKAPI):
+class YAAPI():
     #Класс для создания папки и загрузки фотографий на Яндекс Диск, скачанных ранее из ВК
     DISK_URL = "https://cloud-api.yandex.net/v1/disk/resources"
     UPLOAD_URL = "https://cloud-api.yandex.net/v1/disk/resources/upload"
@@ -97,9 +110,9 @@ class YAAPI(VKAPI):
         headers = self._get_header_yadisk()
         response = requests.put(self.DISK_URL, params=params, headers=headers)
         if response.status_code == 201:
-            print("Папка создана или уже существует")
+            print("Папка в YandexDisk создана или уже существует")
         else:
-            print("Ошибка при создании папки:", response.json())
+            print("Ошибка при создании папки в YandexDisk:", response.json())
             print()
     
     def upload_images(self, filenames):
@@ -113,13 +126,14 @@ class YAAPI(VKAPI):
                 upload_url = response.json()['href']
                 with open(f"images/{filename}", 'rb') as f:
                     response = requests.put(upload_url, files={'file': f})
-                    print(f"Загрузка {filename} завершена:", response.status_code)
+                    print(f"Загрузка фотографии {filename} в YandexDisk завершена:", response.status_code)
+                    print()
             else:
-                print(f"Ошибка загрузки {filename}: {response.json()}")
+                print(f"Ошибка загрузки фотографии {filename} в YandexDisk: {response.json()}")
                 print()
         return None
 
-class GoogleDriveAPI(VKAPI):
+class GoogleDriveAPI():
     #Класс для создания папки и загрузки фотографий на Google Диск, скачанных ранее из ВК
     """ДЛЯ РАБОТЫ МЕТОДА ТРЕБУЕТСЯ ПРЕДВАРИТЕЛЬНОЕ ПОЛУЧЕНИЕ ТОКЕНА И НАЛИЧИЕ В ПАПКЕ ФАЙЛА credentials.json
         https://console.cloud.google.com/apis/credentials
@@ -166,11 +180,13 @@ class GoogleDriveAPI(VKAPI):
                 'mimeType': 'application/vnd.google-apps.folder'
             }
             folder = service.files().create(body=file_metadata, fields='id').execute()
-            print(f"Папка '{folder_name}' создана. ID: {folder.get('id')}")
+            print(f"Папка '{folder_name}' в GoogleDisk создана. ID: {folder.get('id')}")
+            print()
             return folder.get('id')
         else:
             folder_id = items[0]['id']
-            print(f"Папка '{folder_name}' уже существует. ID: {folder_id}")
+            print(f"Папка '{folder_name}' в GoogleDisk уже существует. ID: {folder_id}")
+            print()
             return folder_id
     
     def upload_images(self, filenames):
@@ -191,7 +207,7 @@ class GoogleDriveAPI(VKAPI):
                     media_body=media,
                     fields='id'
                 ).execute()
-                print(f"Файл '{filename}' успешно загружен. ID: {file.get('id')}")
+                print(f"Файл '{filename}' успешно загружен в GoogleDisk. ID: {file.get('id')}")
             else:
                 print(f"Файл '{filename}' не найден в локальной папке images.")
 
