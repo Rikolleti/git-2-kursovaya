@@ -112,7 +112,7 @@ class YAAPI():
         if response.status_code == 201:
             print("Папка в YandexDisk создана или уже существует")
         else:
-            print("Ошибка при создании папки в YandexDisk:", response.json())
+            print("Ошибка при создании папки в YandexDisk:", response.json()['message'])
             print()
     
     def upload_images(self, filenames):
@@ -127,10 +127,10 @@ class YAAPI():
                 with open(f"images/{filename}", 'rb') as f:
                     response = requests.put(upload_url, files={'file': f})
                     print(f"Загрузка фотографии {filename} в YandexDisk завершена:", response.status_code)
-                    print()
             else:
-                print(f"Ошибка загрузки фотографии {filename} в YandexDisk: {response.json()}")
+                print(f"Ошибка загрузки фотографии {filename} в YandexDisk: {response.json()['message']}")
                 print()
+        print()
         return None
 
 class GoogleDriveAPI():
@@ -219,4 +219,9 @@ if __name__ == "__main__":
 
     photo = vk_client.get_photos()
     upload_images_to_ya = ya_client.upload_images(photo)
-    upload_images_to_google = google_drive_client.upload_images(photo)
+    if os.path.isfile("credentials.json"):
+        upload_images_to_google = google_drive_client.upload_images(photo)
+        print()
+    else:
+        print("Файл credentials.json отсутствует, загрузка файла на GoogleDisk пропущена")
+        print()
