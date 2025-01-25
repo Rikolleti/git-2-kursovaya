@@ -15,7 +15,7 @@
    Установите эти зависимости с помощью pip:
 
    ```bash
-   pip install requests google-auth-oauthlib google-api-python-client
+   pip install -r requirements.txt
 
 ## Установка и использование
 1. **Замените плейсхолдеры в файле settings.ini на ваш реальный токен VK и ID пользователя, а также токен YA**
