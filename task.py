@@ -223,5 +223,5 @@ if __name__ == "__main__":
         upload_images_to_google = google_drive_client.upload_images(photo)
         print()
     else:
-        print("Файл credentials.json отсутствует, загрузка файла на GoogleDisk пропущена")
+        print("Файл credentials.json отсутствует, загрузка фотографий на GoogleDisk пропущена")
         print()
